@@ -1,0 +1,48 @@
+[project]
+name = "nlp-news-classifier"
+version = "0.1.0"
+description = "6-class news article categorization using spaCy + scikit-learn (30-day NLP challenge Days 8-12)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "scikit-learn>=1.4.0",
+    "spacy>=3.7.0",
+    "pandas>=2.1.0",
+    "pyarrow>=14.0.0",
+    "matplotlib>=3.8.0",
+    "seaborn>=0.13.0",
+    "joblib>=1.3.0",
+    "streamlit>=1.30.0",
+    "jupyter>=1.0.0",
+    "jupyterlab>=4.0.0",
+    "ipykernel>=6.28.0",
+    "ipywidgets>=8.1.0",
+    "tqdm>=4.66.0",
+    "numpy>=1.26.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.4.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
