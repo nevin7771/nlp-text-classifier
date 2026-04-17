@@ -46,6 +46,10 @@ def main() -> None:
     le = LabelEncoder()
     y_train = le.fit_transform(df_train["label"])
 
+    print(
+        "Training hybrid model (TF-IDF + spaCy linguistic features). "
+        "On CPU this often takes 1–3+ minutes; progress is not shown per document.\n"
+    )
     model = build_hybrid_pipeline()
     t0 = time.time()
     model.fit(X_train, y_train)

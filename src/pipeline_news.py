@@ -37,6 +37,8 @@ def build_hybrid_pipeline() -> Pipeline:
         ],
         remainder="drop",
         verbose_feature_names_out=False,
+        # Fit/transform columns sequentially — parallel branches duplicate spaCy + CPU load
+        n_jobs=1,
     )
     return Pipeline(
         [
