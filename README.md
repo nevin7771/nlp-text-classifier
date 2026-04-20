@@ -78,7 +78,13 @@ uv run streamlit run app.py
 
 1. **Python version:** In the app **Settings → Python version**, choose **3.12** (or **3.11** / **3.13**). Avoid prerelease Python versions: spaCy publishes wheels per CPython release; mismatches show up as “no wheel for the current platform”.
 2. **Dependencies:** The repo uses `pyproject.toml` + `uv.lock`. After this project’s updates, the default install is slimmer (Jupyter is optional via `--extra notebooks`).
-3. **Model file:** `models/news_hybrid.joblib` is gitignored. Train locally and upload the artifact (e.g. [Secrets](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app#secrets) + app-side path), or run `train.py` in a CI/build step that Cloud supports.
+3. **Model file:** `models/news_hybrid.joblib` is **not** in Git. Either:
+   - **Recommended:** Upload the file to **GitHub Releases** (or any static HTTPS URL), then in **App settings → Secrets** add:
+     ```toml
+     NEWS_CLASSIFIER_MODEL_URL = "https://github.com/USER/REPO/releases/download/TAG/news_hybrid.joblib"
+     ```
+     The app downloads it once to `/tmp` and caches it in session.
+   - Or set **`NEWS_CLASSIFIER_MODEL_PATH`** to a path where your host mounts the file.
 
 ---
 

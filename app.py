@@ -3,12 +3,14 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
-from src.inference import default_artifact_path, load_artifact, predict_with_details
+from src.inference import load_artifact, predict_with_details
+from src.model_resolve import resolve_model_file
 
 SAMPLES = {
     "Science": (
@@ -38,6 +40,41 @@ SAMPLES = {
 }
 
 
+def _secret_model_url() -> str:
+    try:
+        u = st.secrets.get("NEWS_CLASSIFIER_MODEL_URL", "")
+        if isinstance(u, str):
+            return u.strip()
+        if u is not None:
+            return str(u).strip()
+    except Exception:
+        pass
+    return ""
+
+
+def _merged_model_url() -> str:
+    """Env wins (Streamlit may mirror secrets into env on some hosts)."""
+    u = os.environ.get("NEWS_CLASSIFIER_MODEL_URL", "").strip()
+    if u:
+        return u
+    return _secret_model_url()
+
+
+def _merged_force_download() -> bool:
+    v = os.environ.get("NEWS_CLASSIFIER_FORCE_DOWNLOAD", "").strip().lower()
+    if v in ("1", "true", "yes"):
+        return True
+    try:
+        s = st.secrets.get("NEWS_CLASSIFIER_FORCE_DOWNLOAD", None)
+        if s is True:
+            return True
+        if isinstance(s, str) and s.strip().lower() in ("1", "true", "yes"):
+            return True
+    except Exception:
+        pass
+    return False
+
+
 @st.cache_resource
 def _cached_bundle(path_str: str):
     return load_artifact(Path(path_str))
@@ -47,6 +84,30 @@ def _inject_sample() -> None:
     choice = st.session_state.get("sample_pick", "(none)")
     if choice != "(none)" and choice in SAMPLES:
         st.session_state["main_text"] = SAMPLES[choice]
+
+
+def _deploy_help() -> None:
+    st.markdown(
+        """
+**Why this happens:** `models/news_hybrid.joblib` is not in Git (too large / generated).
+
+**Streamlit Community Cloud — pick one:**
+
+1. **Secrets (recommended)** — Upload the file to **GitHub Releases** (or any HTTPS URL), then in the app
+   **Settings → Secrets** add:
+   ```toml
+   NEWS_CLASSIFIER_MODEL_URL = "https://github.com/nevin7771/nlp-text-classifier/releases/download/v1.0.0/news_hybrid.joblib"
+   ```
+   Use your **real** release tag (e.g. `v1.0.0`) — **no** `<tag>` or other placeholders. Open the URL in a browser; it must download the `.joblib` file directly.
+
+2. **Environment variable** — Same URL in `NEWS_CLASSIFIER_MODEL_URL` (if your host supports env vars).
+
+3. **Direct path** — If the platform lets you attach a file at a fixed path, set:
+   `NEWS_CLASSIFIER_MODEL_PATH = "/path/to/news_hybrid.joblib"`
+
+**Locally:** run `uv run python train.py`, then refresh (default path `models/news_hybrid.joblib`).
+        """
+    )
 
 
 def main() -> None:
@@ -60,17 +121,21 @@ def main() -> None:
     st.title("6-class news classifier")
     st.caption(
         "Hybrid model: TF-IDF + spaCy linguistic features · Day 12 demo · "
-        "Train with `uv run python train.py` if the artifact is missing."
+        "Cloud: set `NEWS_CLASSIFIER_MODEL_URL` in Secrets (see sidebar / expander below)."
     )
 
-    default_path = default_artifact_path()
     with st.sidebar:
         st.subheader("Model")
-        artifact_path = st.text_input(
-            "Path to joblib bundle",
-            value=str(default_path),
-            help="Default: models/news_hybrid.joblib after training.",
+        override = st.text_input(
+            "Optional: path to .joblib (overrides env)",
+            value="",
+            placeholder="Leave empty to use env / default / download URL",
+            help="Local path only. On Cloud, use Secrets NEWS_CLASSIFIER_MODEL_URL instead.",
         )
+        if _merged_model_url():
+            st.info("Using **NEWS_CLASSIFIER_MODEL_URL** (env or Secrets).")
+        elif os.environ.get("NEWS_CLASSIFIER_MODEL_PATH"):
+            st.info("Using **NEWS_CLASSIFIER_MODEL_PATH**.")
         st.divider()
         st.subheader("Try a sample")
         st.selectbox(
@@ -84,16 +149,19 @@ def main() -> None:
             "**Classes:** HEALTH · LIFESTYLE · POLITICS · SCIENCE · SPORTS · TECHNOLOGY"
         )
 
-    path = Path(artifact_path)
-    if not path.is_file():
-        st.error(
-            f"Model not found at `{path}`. Run **`uv run python train.py`** from the "
-            "project root, then refresh this page."
-        )
-        st.stop()
-
     try:
-        bundle = _cached_bundle(str(path.resolve()))
+        with st.spinner("Loading model (downloading on first run may take a minute)…"):
+            path = resolve_model_file(
+                override if override.strip() else None,
+                model_url=_merged_model_url() or None,
+                force_download=_merged_force_download(),
+            )
+            bundle = _cached_bundle(str(path))
+    except (FileNotFoundError, ValueError, OSError) as e:
+        st.error(str(e))
+        with st.expander("How to fix (especially on Streamlit Cloud)", expanded=True):
+            _deploy_help()
+        st.stop()
     except Exception as e:
         st.exception(e)
         st.stop()
