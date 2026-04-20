@@ -88,24 +88,27 @@ def _inject_sample() -> None:
 
 def _deploy_help() -> None:
     st.markdown(
-        """
+        r"""
 **Why this happens:** `models/news_hybrid.joblib` is not in Git (too large / generated).
 
-**Streamlit Community Cloud — pick one:**
+**If you see HTTP 404:** GitHub has **no file** at that URL yet. Example URLs in docs are **templates** — you must create the release and upload the asset first.
 
-1. **Secrets (recommended)** — Upload the file to **GitHub Releases** (or any HTTPS URL), then in the app
-   **Settings → Secrets** add:
+**Create the release (one-time):**
+
+1. Train locally: `uv run python train.py` → produces `models/news_hybrid.joblib`.
+2. On GitHub: **Repo → Releases → Create a new release**.
+3. Choose a **new tag** (e.g. `model-v1` or `v1.0.0`) and publish.
+4. **Attach** `news_hybrid.joblib` under “Attach binaries” (exact name can differ; the URL will match what you upload).
+5. After publishing, open the release page, **right‑click the file** → **Copy link** (or click Download and copy the URL from the address bar).
+6. Paste **only that URL** into Streamlit **Secrets**:
    ```toml
-   NEWS_CLASSIFIER_MODEL_URL = "https://github.com/nevin7771/nlp-text-classifier/releases/download/v1.0.0/news_hybrid.joblib"
+   NEWS_CLASSIFIER_MODEL_URL = "https://github.com/OWNER/REPO/releases/download/TAG/FILENAME.joblib"
    ```
-   Use your **real** release tag (e.g. `v1.0.0`) — **no** `<tag>` or other placeholders. Open the URL in a browser; it must download the `.joblib` file directly.
+7. Save secrets, **Restart** the app, and set `NEWS_CLASSIFIER_FORCE_DOWNLOAD = true` once if it cached a bad download.
 
-2. **Environment variable** — Same URL in `NEWS_CLASSIFIER_MODEL_URL` (if your host supports env vars).
+**Test:** Open the URL in a private browser tab — it must **download** a multi‑MB file, not show a GitHub 404 page.
 
-3. **Direct path** — If the platform lets you attach a file at a fixed path, set:
-   `NEWS_CLASSIFIER_MODEL_PATH = "/path/to/news_hybrid.joblib"`
-
-**Locally:** run `uv run python train.py`, then refresh (default path `models/news_hybrid.joblib`).
+**Locally:** run `uv run python train.py`, then `uv run streamlit run app.py` (no Secrets needed).
         """
     )
 

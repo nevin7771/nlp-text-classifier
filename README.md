@@ -79,11 +79,12 @@ uv run streamlit run app.py
 1. **Python version:** In the app **Settings → Python version**, choose **3.12** (or **3.11** / **3.13**). Avoid prerelease Python versions: spaCy publishes wheels per CPython release; mismatches show up as “no wheel for the current platform”.
 2. **Dependencies:** The repo uses `pyproject.toml` + `uv.lock`. After this project’s updates, the default install is slimmer (Jupyter is optional via `--extra notebooks`).
 3. **Model file:** `models/news_hybrid.joblib` is **not** in Git. Either:
-   - **Recommended:** Upload the file to **GitHub Releases** (or any static HTTPS URL), then in **App settings → Secrets** add:
+   - **Recommended:** Create a **GitHub Release**, attach `news_hybrid.joblib`, publish, then copy the **real** download URL from the release page (right‑click the asset → copy link). Paste it into **App settings → Secrets**:
      ```toml
-     NEWS_CLASSIFIER_MODEL_URL = "https://github.com/USER/REPO/releases/download/TAG/news_hybrid.joblib"
+     NEWS_CLASSIFIER_MODEL_URL = "https://github.com/USER/REPO/releases/download/YOUR_TAG/your_file.joblib"
      ```
-     The app downloads it once to `/tmp` and caches it in session.
+     If you get **HTTP 404**, that URL does not exist yet — the release or file name does not match. Open the URL in a browser; it must download the model, not a 404 page.
+     The app downloads once to `/tmp` (set `NEWS_CLASSIFIER_FORCE_DOWNLOAD = true` once after fixing a bad URL).
    - Or set **`NEWS_CLASSIFIER_MODEL_PATH`** to a path where your host mounts the file.
 
 ---
