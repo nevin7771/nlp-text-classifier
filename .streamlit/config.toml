@@ -1,0 +1,5 @@
+# https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app
+# Prefer CPython 3.12 in the Community Cloud UI (Settings → Python version) if dependency wheels fail.
+
+[server]
+headless = true

@@ -33,14 +33,18 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ### 2. Create virtual environment and install dependencies
 ```bash
-cd Downloads/Projects/nlp-news-classifier
+cd path/to/nlp-text-classifier
 uv sync
+# Jupyter + matplotlib/seaborn (Days 8–11 notebooks): add the notebooks extra
+uv sync --extra notebooks
 ```
 
-### 3. Install spaCy language model
+Python **3.11–3.13** is supported (`requires-python` caps below 3.14 so spaCy wheels stay available on Linux hosts such as **Streamlit Community Cloud**).
+
+`en_core_web_sm` is installed from `pyproject.toml` (no separate `spacy download` required for the small model).
+
+### 3. Optional: larger spaCy model (Day 10 notes)
 ```bash
-uv run python -m spacy download en_core_web_sm
-# Day 10 also needs:
 uv run python -m spacy download en_core_web_md
 ```
 
@@ -69,6 +73,12 @@ echo "Scientists discover new exoplanets near distant stars" | uv run python pre
 # Streamlit app
 uv run streamlit run app.py
 ```
+
+### Streamlit Community Cloud
+
+1. **Python version:** In the app **Settings → Python version**, choose **3.12** (or **3.11** / **3.13**). Avoid prerelease Python versions: spaCy publishes wheels per CPython release; mismatches show up as “no wheel for the current platform”.
+2. **Dependencies:** The repo uses `pyproject.toml` + `uv.lock`. After this project’s updates, the default install is slimmer (Jupyter is optional via `--extra notebooks`).
+3. **Model file:** `models/news_hybrid.joblib` is gitignored. Train locally and upload the artifact (e.g. [Secrets](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app#secrets) + app-side path), or run `train.py` in a CI/build step that Cloud supports.
 
 ---
 
