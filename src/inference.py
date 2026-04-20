@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import joblib
+import numpy as np
 import pandas as pd
 
 from src.nlp_utils_news import SPACY_MODEL_SMALL, SpacyPreprocessor
@@ -40,3 +41,28 @@ def predict_one(bundle: dict[str, Any], raw_text: str) -> str:
     X = raw_text_to_frame(raw_text)
     y_idx = bundle["pipeline"].predict(X)[0]
     return str(bundle["classes"][int(y_idx)])
+
+
+def predict_with_details(
+    bundle: dict[str, Any], raw_text: str
+) -> tuple[str, np.ndarray, np.ndarray | None]:
+    """
+    Return (predicted_label, class_names, decision_function scores or None).
+
+    LinearSVC multiclass exposes ``decision_function`` with one score per class
+    (larger = more confident toward that class).
+    """
+    X = raw_text_to_frame(raw_text)
+    pipe = bundle["pipeline"]
+    classes = np.asarray(bundle["classes"])
+    y_idx = int(pipe.predict(X)[0])
+    label = str(classes[y_idx])
+
+    scores: np.ndarray | None = None
+    if hasattr(pipe, "decision_function"):
+        raw = pipe.decision_function(X)
+        scores = np.asarray(raw)
+        if scores.ndim == 2:
+            scores = scores[0]
+
+    return label, classes, scores

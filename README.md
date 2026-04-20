@@ -13,7 +13,7 @@ Part of the [30-day build-in-public NLP challenge](https://github.com/nevin7771/
 | 9 | `day9_baseline_tfidf.ipynb` | TF-IDF baseline + 5-fold cross-validation |
 | 10 | `day10_feature_engineering.ipynb` | Hybrid pipeline: TF-IDF + linguistic features |
 | 11 | `day11_final_model.ipynb` | Model persistence, `train.py`, `predict.py` |
-| 12 | Streamlit app | Live demo deployment |
+| 12 | `day12_streamlit_app.ipynb` · `app.py` | Streamlit live demo + decision scores |
 
 ## Dataset
 
